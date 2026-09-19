@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#fbfbfd" />
+<meta name="description" content="iPassword — 迄今为止最快，最强的 ipassword。本地加密级随机密码生成器。" />
+<title>iPassword — 迄今为止最快，最强的 ipassword</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  :root {
+    --bg: #fbfbfd;
+    --nav-bg: rgba(251, 251, 253, 0.72);
+    --text: #1d1d1f;
+    --text2: #6e6e73;
+    --card: #ffffff;
+    --display: #f5f5f7;
+    --track: #e8e8ed;
+    --border: rgba(0, 0, 0, 0.08);
+    --blue: #0071e3;
+    --blue-hover: #0077ed;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 24px 60px rgba(0, 0, 0, 0.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --nav-bg: rgba(0, 0, 0, 0.72);
+      --text: #f5f5f7;
+      --text2: #86868b;
+      --card: #1d1d1f;
+      --display: #2c2c2e;
+      --track: #3a3a3c;
+      --border: rgba(255, 255, 255, 0.1);
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.35), 0 24px 60px rgba(0, 0, 0, 0.55);
+    }
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: 68px;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+      "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    transition: background 0.4s ease, color 0.4s ease;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    background:
+      radial-gradient(900px 520px at 50% -8%, rgba(0, 113, 227, 0.11), transparent 70%),
+      radial-gradient(720px 420px at 88% 6%, rgba(175, 82, 222, 0.08), transparent 72%);
+  }
+
+  /* ── 导航栏 ───────────────────────────────── */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--nav-bg);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 1024px;
+    margin: 0 auto;
+    height: 48px;
+    padding: 0 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    text-decoration: none;
+    flex: 0 0 auto;
+  }
+  .brand svg { width: 15px; height: 15px; fill: currentColor; margin-top: -2px; }
+
+  .nav-links {
+    display: flex;
+    gap: 26px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .nav-links::-webkit-scrollbar { display: none; }
+  .nav-links a {
+    font-size: 12px;
+    color: var(--text2);
+    text-decoration: none;
+    white-space: nowrap;
+    padding: 4px 0;
+    position: relative;
+    transition: color 0.2s ease;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-links a.active { color: var(--text); font-weight: 500; }
+  .nav-links a.active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 1.5px;
+    border-radius: 2px;
+    background: var(--blue);
+  }
+  @media (max-width: 480px) {
+    .nav-links { gap: 18px; }
+    .nav-links a { font-size: 11.5px; }
+  }
+
+  /* ── 通用区块 ─────────────────────────────── */
+  .section { padding: 0 22px; }
+
+  .section-head {
+    max-width: 760px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 100px 0 46px;
+  }
+  .section-head .kicker {
+    margin: 0 0 12px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: #bf4800;
+  }
+  @media (prefers-color-scheme: dark) { .section-head .kicker { color: #ff9f0a; } }
+
+  .section-head h2 {
+    margin: 0;
+    font-size: clamp(28px, 4.6vw, 52px);
+    line-height: 1.08;
+    letter-spacing: -0.022em;
+    font-weight: 700;
+  }
+  .section-head p {
+    margin: 20px auto 0;
+    max-width: 600px;
+    font-size: clamp(15px, 1.8vw, 19px);
+    line-height: 1.55;
+    color: var(--text2);
+  }
+
+  .grad {
+    background: linear-gradient(120deg, #0071e3 0%, #7b5cff 48%, #ff2d55 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* ── Hero ─────────────────────────────────── */
+  .hero {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 92px 0 54px;
+    text-align: center;
+  }
+  .hero .eyebrow {
+    margin: 0 0 16px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: #bf4800;
+  }
+  @media (prefers-color-scheme: dark) { .hero .eyebrow { color: #ff9f0a; } }
+
+  .hero h1 {
+    margin: 0;
+    font-size: clamp(34px, 6.6vw, 72px);
+    line-height: 1.06;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+  }
+  .hero .sub {
+    margin: 24px auto 0;
+    max-width: 600px;
+    font-size: clamp(16px, 2vw, 21px);
+    line-height: 1.5;
+    font-weight: 400;
+    color: var(--text2);
+    letter-spacing: 0.004em;
+  }
+
+  /* ── 生成器卡片 ───────────────────────────── */
+  .gen-wrap { padding: 0 0 20px; }
+
+  .card {
+    max-width: 660px;
+    margin: 0 auto;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 26px;
+    box-shadow: var(--shadow);
+    transition: background 0.4s ease, border-color 0.4s ease;
+  }
+
+  .display {
+    background: var(--display);
+    border-radius: 18px;
+    min-height: 118px;
+    padding: 24px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    word-break: break-all;
+    transition: background 0.4s ease;
+    user-select: all;
+  }
+  .pw {
+    font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 30px;
+    font-weight: 500;
+    letter-spacing: 0.045em;
+    line-height: 1.34;
+    color: var(--text);
+    transition: font-size 0.2s ease;
+  }
+
+  .strength {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 18px;
+    padding: 0 4px;
+  }
+  .bars { display: flex; gap: 5px; flex: 1; }
+  .bar {
+    flex: 1;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--track);
+    transition: background 0.35s ease;
+  }
+  .strength-text {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    transition: color 0.35s ease;
+  }
+
+  .actions { display: flex; gap: 12px; margin-top: 22px; }
+
+  .btn {
+    flex: 1;
+    height: 52px;
+    border: none;
+    border-radius: 980px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.25s, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.25s, color 0.25s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn svg { width: 17px; height: 17px; flex: 0 0 auto; }
+
+  .btn.primary {
+    background: var(--blue);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(0, 113, 227, 0.28);
+  }
+  .btn.primary:hover { background: var(--blue-hover); transform: scale(1.015); }
+  .btn.primary:active { transform: scale(0.985); }
+  .btn.primary.copied {
+    background: #30d158;
+    box-shadow: 0 4px 14px rgba(48, 209, 88, 0.3);
+  }
+
+  .btn.ghost { background: var(--display); color: var(--text); }
+  .btn.ghost:hover { background: var(--track); }
+  .btn.ghost:active { transform: scale(0.985); }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .btn.spin svg { animation: spin 0.55s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  .divider { height: 1px; background: var(--border); margin: 28px 0 22px; }
+
+  .opt-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 4px;
+  }
+  .opt-head > span:first-child { font-size: 15px; font-weight: 500; }
+  .len-badge {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--blue);
+    font-variant-numeric: tabular-nums;
+    min-width: 30px;
+    text-align: right;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--track);
+    outline: none;
+    margin: 18px 0 6px;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 5px; border-radius: 3px; background: transparent;
+  }
+  input[type="range"]::-moz-range-track {
+    height: 5px; border-radius: 3px; background: transparent;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 26px; height: 26px;
+    margin-top: -10.5px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 0.5px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18), 0 0 0 0 rgba(0, 113, 227, 0.25);
+    transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.18s;
+  }
+  input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.08); }
+  input[type="range"]:active::-webkit-slider-thumb {
+    transform: scale(1.14);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18), 0 0 0 8px rgba(0, 113, 227, 0.16);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 0.5px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+  }
+
+  .toggles { margin-top: 16px; }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 13px 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .toggle-row:last-child { border-bottom: none; }
+
+  .toggle-label { font-size: 15px; color: var(--text); line-height: 1.3; }
+  .toggle-label em {
+    display: block;
+    font-style: normal;
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 2px;
+    letter-spacing: 0.01em;
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 51px;
+    height: 31px;
+    flex: 0 0 auto;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .track {
+    position: absolute;
+    inset: 0;
+    border-radius: 31px;
+    background: var(--track);
+    cursor: pointer;
+    transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .track::before {
+    content: "";
+    position: absolute;
+    width: 27px; height: 27px;
+    top: 2px; left: 2px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.16);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .switch input:checked + .track { background: #34c759; }
+  .switch input:checked + .track::before { transform: translateX(20px); }
+  .switch input:focus-visible + .track { box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.28); }
+
+  /* ── 特性网格 ─────────────────────────────── */
+  .features {
+    max-width: 1024px;
+    margin: 0 auto;
+    padding: 56px 0 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 16px;
+  }
+  .feat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 26px 24px;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+      background 0.4s ease, border-color 0.4s ease;
+  }
+  .feat:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.09);
+  }
+  .feat .ico {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, rgba(0, 113, 227, 0.14), rgba(123, 92, 255, 0.14));
+    color: var(--blue);
+  }
+  .feat .ico svg { width: 20px; height: 20px; }
+  .feat h3 {
+    margin: 0 0 8px;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .feat p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text2);
+  }
+
+  /* ── 安全区块 ─────────────────────────────── */
+  .sec-grid {
+    max-width: 1024px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 18px;
+  }
+  .sec-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 32px 28px;
+    transition: background 0.4s ease, border-color 0.4s ease;
+  }
+  .sec-card h3 {
+    margin: 0 0 12px;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+  }
+  .sec-card p {
+    margin: 0 0 14px;
+    font-size: 15px;
+    line-height: 1.62;
+    color: var(--text2);
+  }
+  .sec-card p:last-child { margin-bottom: 0; }
+  .sec-card code {
+    font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    background: var(--display);
+    border-radius: 5px;
+    padding: 2px 6px;
+    color: var(--text);
+  }
+
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+  }
+  .badge {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    padding: 6px 12px;
+    border-radius: 980px;
+    background: var(--display);
+    color: var(--text2);
+  }
+
+  /* ── 技术规格 ─────────────────────────────── */
+  .spec-table {
+    max-width: 840px;
+    margin: 0 auto;
+    border-top: 1px solid var(--border);
+  }
+  .spec-row {
+    display: grid;
+    grid-template-columns: 210px 1fr;
+    gap: 24px;
+    padding: 20px 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .spec-row dt {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+  .spec-row dd {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  @media (max-width: 620px) {
+    .spec-row { grid-template-columns: 1fr; gap: 6px; padding: 16px 4px; }
+  }
+
+  /* ── 支持 / FAQ ───────────────────────────── */
+  .faq {
+    max-width: 840px;
+    margin: 0 auto;
+    border-top: 1px solid var(--border);
+  }
+  .faq details {
+    border-bottom: 1px solid var(--border);
+  }
+  .faq summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 22px 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: -0.008em;
+    transition: color 0.2s ease;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary:hover { color: var(--blue); }
+  .faq summary .chev {
+    flex: 0 0 auto;
+    width: 16px; height: 16px;
+    color: var(--text2);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .faq details[open] summary .chev { transform: rotate(180deg); }
+  .faq .answer {
+    padding: 0 4px 24px;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--text2);
+    max-width: 700px;
+  }
+
+  /* ── 行动号召 ─────────────────────────────── */
+  .cta {
+    max-width: 840px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 90px 0 100px;
+  }
+  .cta h2 {
+    margin: 0 0 18px;
+    font-size: clamp(24px, 3.6vw, 40px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+  }
+  .cta p {
+    margin: 0 0 28px;
+    font-size: 16px;
+    color: var(--text2);
+  }
+  .cta .btn { max-width: 260px; margin: 0 auto; text-decoration: none; }
+
+  /* ── Toast ────────────────────────────────── */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 42px;
+    transform: translate(-50%, 18px);
+    background: rgba(28, 28, 30, 0.88);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    color: #fff;
+    font-size: 14.5px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    padding: 12px 24px;
+    border-radius: 980px;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 999;
+    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ── 页脚 ─────────────────────────────────── */
+  footer {
+    padding: 0 24px 70px;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    padding-top: 40px;
+  }
+  .foot-note {
+    max-width: 640px;
+    margin: 0 auto;
+    font-size: 12px;
+    line-height: 1.75;
+    color: var(--text2);
+  }
+  .foot-note strong { color: var(--text); font-weight: 500; }
+
+  /* ── 滚动进入动画 ─────────────────────────── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .reveal.in { opacity: 1; transform: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .reveal { opacity: 1; transform: none; transition: none; }
+    * { animation-duration: 0.001s !important; }
+  }
+
+  @media (max-width: 520px) {
+    .hero { padding: 64px 0 40px; }
+    .section-head { padding: 74px 0 34px; }
+    .card { padding: 18px; border-radius: 24px; }
+    .display { min-height: 100px; padding: 20px 14px; }
+    .actions { flex-direction: column-reverse; }
+    .btn { height: 50px; }
+    .section { padding: 0 16px; }
+    .sec-card { padding: 26px 22px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ 导航栏 ══════════════ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#overview">
+      <svg viewBox="0 0 170 170" aria-hidden="true">
+        <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.2-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.93.21-9.84-1.96-14.75-6.52-3.13-2.73-7.04-7.41-11.73-14.05-5.03-7.09-9.16-15.31-12.4-24.67-3.47-10.1-5.21-19.88-5.21-29.35 0-10.85 2.34-20.2 7.04-28.04 3.69-6.3 8.6-11.27 14.75-14.92 6.15-3.65 12.79-5.51 19.94-5.63 3.91 0 9.04 1.21 15.42 3.59 6.36 2.39 10.45 3.6 12.24 3.6 1.34 0 5.88-1.42 13.57-4.24 7.27-2.62 13.41-3.7 18.43-3.28 13.62 1.1 23.85 6.47 30.66 16.13-12.18 7.38-18.21 17.72-18.09 30.98.11 10.33 3.86 18.93 11.24 25.76 3.34 3.17 7.07 5.62 11.22 7.36-.9 2.61-1.85 5.11-2.86 7.51zM119.11 7.24c0 8.1-2.96 15.67-8.86 22.68-7.12 8.32-15.73 13.13-25.07 12.38-.12-.98-.19-2.01-.19-3.1 0-7.78 3.39-16.1 9.4-22.91 3-3.44 6.82-6.31 11.45-8.6 4.62-2.25 8.99-3.5 13.1-3.72.12 1.1.17 2.2.17 3.27z"/>
+      </svg>
+      <span>iPassword</span>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="#overview">概览</a>
+      <a href="#security">安全</a>
+      <a href="#specs">技术规格</a>
+      <a href="#support">支持</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ══════════════ 概览 ══════════════ -->
+  <section class="section" id="overview">
+
+    <div class="hero">
+      <p class="eyebrow">全新登场</p>
+      <h1>迄今为止最快，<br />最强的 <span class="grad">ipassword</span>。</h1>
+      <p class="sub">
+        由系统级加密随机数引擎驱动。每一枚密码都在你的设备上即时生成，<br />
+        绝不上传、绝不记录、绝不留痕。
+      </p>
+    </div>
+
+    <div class="gen-wrap">
+      <div class="card">
+
+        <div class="display" id="display">
+          <span class="pw" id="pw"></span>
+        </div>
+
+        <div class="strength">
+          <div class="bars" aria-hidden="true">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+          </div>
+          <div class="strength-text" id="strengthText">—</div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="copyBtn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2.5"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <span id="copyLabel">拷贝密码</span>
+          </button>
+
+          <button class="btn ghost" id="regenBtn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 12a9 9 0 1 1-2.64-6.36"/>
+              <path d="M21 3v6h-6"/>
+            </svg>
+            <span>重新生成</span>
+          </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="opt-head">
+          <span>密码长度</span>
+          <span class="len-badge" id="lenValue">20</span>
+        </div>
+        <input type="range" id="length" min="8" max="64" step="1" value="20"
+               aria-label="密码长度" />
+
+        <div class="toggles">
+          <div class="toggle-row">
+            <span class="toggle-label">大写字母<em>A – Z</em></span>
+            <label class="switch">
+              <input type="checkbox" id="optUpper" checked />
+              <span class="track"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <span class="toggle-label">小写字母<em>a – z</em></span>
+            <label class="switch">
+              <input type="checkbox" id="optLower" checked />
+              <span class="track"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <span class="toggle-label">数字<em>0 – 9</em></span>
+            <label class="switch">
+              <input type="checkbox" id="optNumber" checked />
+              <span class="track"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <span class="toggle-label">符号<em>! @ # $ % ^ &amp; *</em></span>
+            <label class="switch">
+              <input type="checkbox" id="optSymbol" checked />
+              <span class="track"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <span class="toggle-label">排除易混淆字符<em>I l O S s Z z B b G g</em></span>
+            <label class="switch">
+              <input type="checkbox" id="optAmbiguous" />
+              <span class="track"></span>
+            </label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 特性网格 -->
+    <div class="features">
+      <div class="feat reveal">
+        <div class="ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M13 2 3 14h8l-1 8 10-12h-8l1-8z"/>
+          </svg>
+        </div>
+        <h3>毫秒级生成</h3>
+        <p>无需联网、无需等待。点击即得，快得就像它本来就在那里。</p>
+      </div>
+
+      <div class="feat reveal">
+        <div class="ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2.5"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <h3>加密级随机</h3>
+        <p>基于浏览器的 <code>crypto.getRandomValues</code>，与系统安全模块同源。</p>
+      </div>
+
+      <div class="feat reveal">
+        <div class="ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <h3>零知识架构</h3>
+        <p>密码从不离开这台设备。没有服务器，也就没有可被攻破的服务器。</p>
+      </div>
+
+      <div class="feat reveal">
+        <div class="ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 3v18h18"/>
+            <path d="m7 15 4-5 3 3 5-7"/>
+          </svg>
+        </div>
+        <h3>实时强度评估</h3>
+        <p>每一次调整都会即时重算熵值，让你清楚知道这道门有多结实。</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══════════════ 安全 ══════════════ -->
+  <section class="section" id="security">
+    <div class="section-head reveal">
+      <p class="kicker">安全</p>
+      <h2>随机，<span class="grad">不靠运气</span>。</h2>
+      <p>真正的随机不是「看起来乱」，而是数学上无法预测。iPassword 的每一枚密码，都来自操作系统的密码学安全伪随机数生成器。</p>
+    </div>
+
+    <div class="sec-grid">
+      <div class="sec-card reveal">
+        <h3>密码学级随机源</h3>
+        <p>浏览器通过 <code>crypto.getRandomValues()</code> 直接向操作系统索取随机字节——在 macOS 与 iOS 上即由内核的 CSPRNG 提供。</p>
+        <p>它被设计用于密钥、令牌与会话 ID，因此同样适合用来生成你的密码。</p>
+      </div>
+
+      <div class="sec-card reveal">
+        <h3>拒绝采样，消除模偏置</h3>
+        <p>把 32 位随机数直接取模会引入偏置，让某些字符出现得更频繁。我们用拒绝采样丢弃落在尾部的取值，让每个字符严格等概率。</p>
+        <p>除此之外，密码生成后还会经过 Fisher–Yates 洗牌，确保「必须包含的字符类型」不会固定在开头。</p>
+        <div class="badge-row">
+          <span class="badge">无模偏置</span>
+          <span class="badge">Fisher–Yates 洗牌</span>
+          <span class="badge">类型全覆盖</span>
+        </div>
+      </div>
+
+      <div class="sec-card reveal">
+        <h3>留在你的设备上</h3>
+        <p>整个生成过程发生在浏览器本地。没有网络请求，没有遥测，没有第三方脚本，没有分析代码。</p>
+        <p>本站唯一的本地写入，是你勾选的那些偏好开关——密码本身从不落盘、不缓存、不进历史记录。</p>
+      </div>
+
+      <div class="sec-card reveal">
+        <h3>熵值，而不是感觉</h3>
+        <p>强度由字符池大小与长度共同决定：<code>熵 ≈ 长度 × log₂(字符池)</code>。</p>
+        <p>默认的 20 位全字符池配置，已远超绝大多数服务对「强密码」的定义。</p>
+        <div class="badge-row">
+          <span class="badge">默认约 130 位熵</span>
+          <span class="badge">最大 64 位长度</span>
+        </div>
+      </div>
+
+      <div class="sec-card reveal">
+        <h3>不生成，也不存储</h3>
+        <p>iPassword 不是密码管理器。它不保管你的密码，也没有找回功能——因为没有东西可被找回。</p>
+        <p>请把生成的密码交给可信的密码管理器，或者记在只有你能看到的地方。</p>
+      </div>
+
+      <div class="sec-card reveal">
+        <h3>可自行验证</h3>
+        <p>页面不依赖任何外部资源，你可以断网打开、另存为本地文件打开，功能完全一致。</p>
+        <p>打开开发者工具的 Network 面板再生成几次，你会看到一片空白。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ 技术规格 ══════════════ -->
+  <section class="section" id="specs">
+    <div class="section-head reveal">
+      <p class="kicker">技术规格</p>
+      <h2>每一处细节，<span class="grad">都经得起推敲</span>。</h2>
+      <p>下面是我们对随机性、性能与隐私的全部承诺。</p>
+    </div>
+
+    <dl class="spec-table reveal">
+      <div class="spec-row">
+        <dt>密码长度</dt>
+        <dd>8 – 64 个字符，单字符步进可调，默认 20 位。</dd>
+      </div>
+      <div class="spec-row">
+        <dt>字符池</dt>
+        <dd>大写 A–Z、小写 a–z、数字 0–9、符号共 28 个，合计最多 90 个字符。</dd>
+      </div>
+      <div class="spec-row">
+        <dt>随机源</dt>
+        <dd>Web Crypto API — <code>crypto.getRandomValues()</code>，由操作系统 CSPRNG 提供，密码学安全。</dd>
+      </div>
+      <div class="spec-row">
+        <dt>偏置处理</dt>
+        <dd>拒绝采样（rejection sampling），消除取模偏置，字符严格等概率出现。</dd>
+      </div>
+      <div class="spec-row">
+        <dt>顺序处理</dt>
+        <dd>Fisher–Yates 原地洗牌，确保各字符类型位置随机。</dd>
+      </div>
+      <div class="spec-row">
+        <dt>熵值估算</dt>
+        <dd>按「长度 × log₂(字符池大小)」实时计算，展示在强度条右侧。</dd>
+      </div>
+      <div class="spec-row">
+        <dt>网络行为</dt>
+        <dd>零请求。页面不加载任何外部字体、脚本、图片或统计代码。</dd>
+      </div>
+      <div class="spec-row">
+        <dt>本地存储</dt>
+        <dd>仅在 localStorage 保存偏好设置（长度与开关状态），密码本身不写入任何存储。</dd>
+      </div>
+      <div class="spec-row">
+        <dt>剪贴板</dt>
+        <dd>使用 Clipboard API 拷贝；在非安全上下文中自动回退到 execCommand。</dd>
+      </div>
+      <div class="spec-row">
+        <dt>可访问性</dt>
+        <dd>支持键盘操作（回车 / 空格重新生成）、焦点可见样式，并适配 prefers-reduced-motion。</dd>
+      </div>
+      <div class="spec-row">
+        <dt>外观</dt>
+        <dd>自动跟随系统浅色 / 深色模式，支持动态字体与安全区域。</dd>
+      </div>
+      <div class="spec-row">
+        <dt>兼容性</dt>
+        <dd>Safari、Chrome、Edge、Firefox 的近期版本，桌面与移动端皆可。</dd>
+      </div>
+    </dl>
+  </section>
+
+  <!-- ══════════════ 支持 ══════════════ -->
+  <section class="section" id="support">
+    <div class="section-head reveal">
+      <p class="kicker">支持</p>
+      <h2>常见问题</h2>
+    </div>
+
+    <div class="faq reveal">
+      <details open>
+        <summary>
+          生成的密码会被发送到服务器吗？
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </summary>
+        <div class="answer">
+          不会。密码完全在浏览器内存中生成与显示，页面没有任何后端接口。你可以断开网络后刷新页面验证——一切照常工作。
+        </div>
+      </details>
+
+      <details>
+        <summary>
+          为什么说它是「加密级」随机？
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </summary>
+        <div class="answer">
+          因为它调用的是 <code>crypto.getRandomValues()</code>，而不是 <code>Math.random()</code>。前者由操作系统的密码学安全伪随机数生成器驱动，输出不可预测；后者的输出序列可以被还原，绝不能用于密码。
+        </div>
+      </details>
+
+      <details>
+        <summary>
+          密码长度选多少才够？
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </summary>
+        <div class="answer">
+          越长越安全，但也要看服务是否接受。一般来说 16 位以上就非常牢固；如果某个网站限制长度，用满它的上限即可。查看强度条右侧的熵值：超过 100 位熵就已经远超实际破解能力范围。
+        </div>
+      </details>
+
+      <details>
+        <summary>
+          「排除易混淆字符」有什么用？
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </summary>
+        <div class="answer">
+          如果你需要手动把密码抄到另一台设备上，<code>I l O S s Z z B b G g</code> 这些字母很容易被看成
+          <code>1 1 0 5 5 2 2 8 6 9</code>。打开这个开关会把它们从字符池中移除，代价是字符池从
+          90 个降到 79 个（20 位密码的熵值从 130 降到 126，仍在「极强」区间）。
+          <br /><br />
+          数字 <code>0123456789</code> 会完整保留，所以密码看起来依然正常。
+        </div>
+      </details>
+
+      <details>
+        <summary>
+          我可以离线使用吗？
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </summary>
+        <div class="answer">
+          可以。把这一页保存为本地 HTML 文件，双击打开即可，功能和在线版本完全一致，且从此连一次网络请求都不会发生。
+        </div>
+      </details>
+
+      <details>
+        <summary>
+          它会把我的密码保存在浏览器里吗？
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </summary>
+        <div class="answer">
+          不会。localStorage 里只记录你选择的长度和开关状态，方便下次打开时保持一致。密码一旦刷新页面就不复存在——请务必先拷贝再离开。
+        </div>
+      </details>
+    </div>
+
+    <!-- 行动号召 -->
+    <div class="cta reveal">
+      <h2>现在就生成一枚。</h2>
+      <p>不需要注册，不需要下载，不需要信任我们。</p>
+      <a class="btn primary" href="#overview">回到生成器</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p class="foot-note">
+    <strong>隐私，是基本人权。</strong><br />
+    所有密码均在浏览器本地通过 <strong>Web Crypto API</strong> 生成，
+    不经过任何服务器，刷新页面后不留任何记录。
+  </p>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ═══════════════ 字符集 ═══════════════ */
+  var SETS = {
+    upper:  'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    lower:  'abcdefghijklmnopqrstuvwxyz',
+    number: '0123456789',
+    symbol: '!@#$%^&*()-_=+[]{}|;:,.<>?/~'
+  };
+  /* 易混淆字符：这些字母在多数无衬线字体下与数字或彼此几乎无法区分。
+     只移除字母、完整保留 10 个数字 —— 既解决看错的问题，又不会让用户
+     觉得「数字怎么只剩几个」。移除后字符池 90 -> 79，20 位熵仍达 126。 */
+  var AMBIGUOUS_RE = /[IlOSsZzBbGg]/g;
+
+  /* ═══════════════ 状态 ═══════════════ */
+  var state = {
+    length: 20,
+    upper: true,
+    lower: true,
+    number: true,
+    symbol: true,
+    noAmbiguous: false
+  };
+
+  try {
+    var saved = JSON.parse(localStorage.getItem('ipassword.opts') || 'null');
+    if (saved && typeof saved === 'object') {
+      Object.keys(state).forEach(function (k) {
+        if (typeof saved[k] === typeof state[k]) state[k] = saved[k];
+      });
+    }
+  } catch (e) { /* 忽略 */ }
+
+  /* ═══════════════ DOM ═══════════════ */
+  var pwEl        = document.getElementById('pw');
+  var strengthEl  = document.getElementById('strengthText');
+  var bars        = Array.prototype.slice.call(document.querySelectorAll('.bar'));
+  var copyBtn     = document.getElementById('copyBtn');
+  var copyLabel   = document.getElementById('copyLabel');
+  var regenBtn    = document.getElementById('regenBtn');
+  var rangeEl     = document.getElementById('length');
+  var lenValueEl  = document.getElementById('lenValue');
+  var toastEl     = document.getElementById('toast');
+
+  var optUpper = document.getElementById('optUpper');
+  var optLower = document.getElementById('optLower');
+  var optNumber = document.getElementById('optNumber');
+  var optSymbol = document.getElementById('optSymbol');
+  var optAmbiguous = document.getElementById('optAmbiguous');
+
+  /* ═══════════════ 加密级随机数（拒绝采样） ═══════════════ */
+  var randBuf = new Uint32Array(1);
+
+  function secureRandom(max) {
+    if (max <= 1) return 0;
+    var limit = Math.floor(4294967296 / max) * max;
+    var x;
+    do {
+      crypto.getRandomValues(randBuf);
+      x = randBuf[0];
+    } while (x >= limit);
+    return x % max;
+  }
+
+  /* ═══════════════ 字符池 ═══════════════ */
+  function getPools() {
+    var pools = [];
+    var keys = ['upper', 'lower', 'number', 'symbol'];
+
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      if (!state[k]) continue;
+      var s = SETS[k];
+      if (state.noAmbiguous) s = s.replace(AMBIGUOUS_RE, '');
+      if (s.length) pools.push(s);
+    }
+
+    if (!pools.length) pools.push(SETS.lower);
+    return pools;
+  }
+
+  /* ═══════════════ 生成密码 ═══════════════ */
+  function generate() {
+    var pools = getPools();
+    var all = pools.join('');
+    var len = state.length;
+    var chars = [];
+
+    var guaranteed = Math.min(pools.length, len);
+    for (var i = 0; i < guaranteed; i++) {
+      var p = pools[i];
+      chars.push(p.charAt(secureRandom(p.length)));
+    }
+
+    while (chars.length < len) {
+      chars.push(all.charAt(secureRandom(all.length)));
+    }
+
+    for (var j = chars.length - 1; j > 0; j--) {
+      var k = secureRandom(j + 1);
+      var tmp = chars[j];
+      chars[j] = chars[k];
+      chars[k] = tmp;
+    }
+
+    return { password: chars.join(''), poolSize: all.length };
+  }
+
+  /* ═══════════════ 字号自适应 ═══════════════ */
+  function applyFontSize(n) {
+    var size;
+    if (n <= 16)      size = 30;
+    else if (n <= 24) size = 26;
+    else if (n <= 32) size = 22;
+    else if (n <= 44) size = 18;
+    else              size = 15;
+
+    var w = window.innerWidth;
+    if (w < 560) size = Math.min(size, 20);
+    if (w < 400) size = Math.min(size, 16);
+
+    pwEl.style.fontSize = size + 'px';
+  }
+
+  /* ═══════════════ 强度评估 ═══════════════ */
+  function updateStrength(poolSize) {
+    var entropy = state.length * Math.log2(poolSize || 1);
+
+    var level, label, color;
+    if (entropy < 45)       { level = 1; label = '较弱'; color = '#ff453a'; }
+    else if (entropy < 70)  { level = 2; label = '一般'; color = '#ff9f0a'; }
+    else if (entropy < 100) { level = 3; label = '强';   color = '#ffd60a'; }
+    else                    { level = 4; label = '极强'; color = '#30d158'; }
+
+    bars.forEach(function (b, i) {
+      b.style.background = i < level ? color : 'var(--track)';
+    });
+
+    strengthEl.textContent = label + ' · 约 ' + Math.round(entropy) + ' 位熵';
+    strengthEl.style.color = color;
+  }
+
+  /* ═══════════════ 渲染 ═══════════════ */
+  var current = '';
+
+  function render() {
+    var r = generate();
+    current = r.password;
+    pwEl.textContent = r.password;
+    applyFontSize(r.password.length);
+    updateStrength(r.poolSize);
+    persist();
+  }
+
+  function persist() {
+    try {
+      localStorage.setItem('ipassword.opts', JSON.stringify(state));
+    } catch (e) { /* 忽略 */ }
+  }
+
+  /* ═══════════════ 滑块轨道填充 ═══════════════ */
+  function updateRangeFill() {
+    var min = +rangeEl.min, max = +rangeEl.max;
+    var pct = ((+rangeEl.value - min) / (max - min)) * 100;
+    rangeEl.style.background =
+      'linear-gradient(to right, var(--blue) 0%, var(--blue) ' + pct + '%, ' +
+      'var(--track) ' + pct + '%, var(--track) 100%)';
+  }
+
+  /* ═══════════════ Toast ═══════════════ */
+  var toastTimer;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      toastEl.classList.remove('show');
+    }, 1800);
+  }
+
+  /* ═══════════════ 复制 ═══════════════ */
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text).then(
+        function () { return true; },
+        function () { return legacyCopy(text); }
+      );
+    }
+    return Promise.resolve(legacyCopy(text));
+  }
+
+  function legacyCopy(text) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '-9999px';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      var ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /* ═══════════════ 生成器事件 ═══════════════ */
+  rangeEl.addEventListener('input', function () {
+    state.length = +rangeEl.value;
+    lenValueEl.textContent = state.length;
+    updateRangeFill();
+    render();
+  });
+
+  function bindToggle(el, key) {
+    el.checked = state[key];
+    el.addEventListener('change', function () {
+      state[key] = el.checked;
+
+      if (!state.upper && !state.lower && !state.number && !state.symbol) {
+        state.lower = true;
+        optLower.checked = true;
+        showToast('至少需要保留一种字符类型');
+      }
+      render();
+    });
+  }
+
+  bindToggle(optUpper, 'upper');
+  bindToggle(optLower, 'lower');
+  bindToggle(optNumber, 'number');
+  bindToggle(optSymbol, 'symbol');
+
+  optAmbiguous.checked = state.noAmbiguous;
+  optAmbiguous.addEventListener('change', function () {
+    state.noAmbiguous = optAmbiguous.checked;
+    render();
+  });
+
+  regenBtn.addEventListener('click', function () {
+    regenBtn.classList.add('spin');
+    setTimeout(function () { regenBtn.classList.remove('spin'); }, 560);
+    render();
+  });
+
+  copyBtn.addEventListener('click', function () {
+    if (!current) return;
+    copyText(current).then(function (ok) {
+      if (!ok) { showToast('拷贝失败，请手动选择复制'); return; }
+
+      copyBtn.classList.add('copied');
+      copyLabel.textContent = '已拷贝';
+
+      setTimeout(function () {
+        copyBtn.classList.remove('copied');
+        copyLabel.textContent = '拷贝密码';
+      }, 1400);
+
+      showToast('密码已拷贝到剪贴板');
+    });
+  });
+
+  // 回车 / 空格快捷重新生成（输入控件内除外）
+  document.addEventListener('keydown', function (e) {
+    var tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'A') return;
+    if (e.target && e.target.isContentEditable) return;
+
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      render();
+      showToast('已重新生成');
+    }
+  });
+
+  // 窗口尺寸变化重算字号
+  var resizeTimer;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      applyFontSize(current.length);
+    }, 120);
+  });
+
+  /* ═══════════════ 滚动监听（导航高亮） ═══════════════ */
+  var sections = Array.prototype.slice.call(document.querySelectorAll('main section[id]'));
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('#navLinks a'));
+
+  function syncActive() {
+    var probe = window.scrollY + 100;
+    var cur = sections.length ? sections[0].id : '';
+
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i].offsetTop <= probe) cur = sections[i].id;
+    }
+
+    // 触底时强制高亮最后一块
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 4 && sections.length) {
+      cur = sections[sections.length - 1].id;
+    }
+
+    navLinks.forEach(function (a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + cur);
+    });
+  }
+
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      syncActive();
+      ticking = false;
+    });
+  }, { passive: true });
+
+  /* ═══════════════ 滚动进入动画 ═══════════════ */
+  var revealEls = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
+
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+
+    revealEls.forEach(function (el) { io.observe(el); });
+  } else {
+    revealEls.forEach(function (el) { el.classList.add('in'); });
+  }
+
+  /* ═══════════════ 初始化 ═══════════════ */
+  rangeEl.value = state.length;
+  lenValueEl.textContent = state.length;
+  updateRangeFill();
+  render();
+  syncActive();
+})();
+</script>
+
+</body>
+</html>
